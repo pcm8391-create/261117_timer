@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포모도로 타이머</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Jua&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 말랑말랑 파스텔 간식 가게처럼 다정한 도구
+   IDEA: 볼이 발그레한 동글이가 시간을 같이 지켜줌
+   PICTURE: 둥근 링 안의 동글이 얼굴과 큰 숫자. 집중하면 눈을 뜨고 통통 뛰고, 쉬면 눈을 감고 졸음
+   COLOUR and TYPE: 복숭아 분홍 지배, 휴식은 민트, 버터 노랑 포인트 / Jua 제목·숫자 + Gowun Dodum 본문
+   LAYOUT: 제목, 가운데 큰 동글이 타이머, 아래 조작·기록·설정 */
+:root{color-scheme:light dark;
+--bg:light-dark(#fff3f6,#241a2b);--dot:light-dark(#ffe2ea,#2d2135);--card:light-dark(#ffffff,#33253b);--ink:light-dark(#4a2c3b,#fdeaf2);--mute:light-dark(#9a6a80,#d3aec3);
+--pink:#ff8fab;--pink2:#cf3f66;--mint:#58cfae;--mint2:#168068;--butter:#ffd86b;--line:light-dark(#ffd6e2,#4f3a58);--acc:var(--pink);--acc2:var(--pink2)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+body.rest{--acc:var(--mint);--acc2:var(--mint2)}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background-color:var(--bg);background-image:radial-gradient(var(--dot) 2.5px,transparent 3px);background-size:30px 30px;color:var(--ink);font:16px/1.55 "Gowun Dodum",system-ui,sans-serif;overflow-x:clip;transition:background-color .4s}
+.wrap{max-width:980px;margin:0 auto;padding:clamp(20px,4vw,48px) max(5vw,16px) 48px}
+h1{font:400 clamp(30px,4.4vw,44px)/1.05 "Jua",sans-serif;margin:0 0 6px;text-align:center;text-wrap:balance}
+.sub{color:var(--mute);margin:0 0 18px;text-align:center}
+.modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px}
+.modes button{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:10px 20px;font:inherit;min-height:44px;cursor:pointer}
+.modes button[aria-pressed=true]{background:var(--acc2);border-color:var(--acc2);color:#fff}
+.stage{display:grid;place-items:center;padding:8px 0}
+.dial{position:relative;width:min(80vw,380px);aspect-ratio:1}
+.dial svg{width:100%;height:100%;overflow:visible}
+.pet{transform-origin:100px 164px}
+.run .pet{animation:hop 1.3s ease-in-out infinite}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-5px) scale(.98,1.03)}}
+.ec,.zz{display:none}body.rest .eo{display:none}body.rest .ec,body.rest .zz{display:block}
+.mid{position:absolute;left:0;right:0;top:58%;display:grid;justify-items:center;text-align:center;pointer-events:none}
+.time{font:400 clamp(40px,11vw,60px)/1 "Jua",sans-serif;color:#4a2c3b;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.lbl{color:var(--acc2);font-size:15px;margin-top:2px}
+.task{display:flex;justify-content:center;margin:16px 0 4px}
+.task input{width:min(100%,420px);text-align:center;font:inherit;font-size:16px;padding:12px 16px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink)}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:14px 0 6px}
+.ctrl button{min-height:48px;min-width:96px;padding:10px 22px;border-radius:999px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:17px;cursor:pointer}
+.ctrl .go{background:var(--acc2);border-color:var(--acc2);color:#fff;min-width:150px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.ctrl .go:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc2);outline-offset:2px}
+.dots{display:flex;gap:6px;justify-content:center;margin:10px 0 0;color:var(--mute);font-size:14px;align-items:center}
+.dots i{font-style:normal;font-size:20px;line-height:1;color:var(--line)}
+.dots i.on{color:var(--pink)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;margin-top:28px}
+.box{background:var(--card);border:2px solid var(--line);border-radius:24px;padding:18px 20px}
+.box h2{font:400 22px/1.2 "Jua",sans-serif;margin:0 0 12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0}
+.row input[type=number]{width:84px;font:inherit;font-size:16px;padding:8px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);text-align:right}
+.row input[type=checkbox]{width:22px;height:22px;accent-color:var(--acc2)}
+.stats{display:flex;gap:12px;margin-bottom:10px}
+.stats div{flex:1;background:var(--bg);border-radius:16px;padding:10px 12px}
+.stats b{display:block;font:400 30px/1 "Jua",sans-serif;color:var(--acc2)}
+.stats span{font-size:13px;color:var(--mute)}
+ul{list-style:none;margin:0;padding:0;max-height:220px;overflow:auto}
+li{display:flex;justify-content:space-between;gap:10px;border-top:2px dotted var(--line);padding:7px 0;font-size:15px}
+li time{color:var(--mute);white-space:nowrap}
+.empty{color:var(--mute);font-size:14px}
+.link{background:none;border:0;color:var(--mute);text-decoration:underline;font:inherit;font-size:14px;cursor:pointer;padding:8px 0;min-height:44px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(120px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:999px;transition:transform .3s;z-index:9}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.note{color:var(--mute);font-size:13px;margin-top:20px;text-align:center}
+@media(max-width:600px){.grid{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>동글이 포모도로</h1>
+  <p class="sub">동글이랑 25분 집중하고 5분 쉬어요. 네 번 하면 긴 휴식!</p>
+
+  <div class="modes" role="group" aria-label="모드">
+    <button id="m-work" data-m="work">집중</button>
+    <button id="m-short" data-m="short">짧은 휴식</button>
+    <button id="m-long" data-m="long">긴 휴식</button>
+  </div>
+
+  <div class="stage">
+    <div class="dial" id="dial">
+      <svg viewBox="0 0 200 200" aria-hidden="true">
+        <circle cx="100" cy="100" r="96" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="var(--line)" stroke-width="10"/>
+        <circle id="arc" cx="100" cy="100" r="86" fill="none" stroke="var(--acc)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset .5s linear,stroke .4s"/>
+        <g class="pet">
+          <ellipse cx="100" cy="168" rx="46" ry="5" fill="#000" opacity=".08"/>
+          <ellipse cx="82" cy="162" rx="12" ry="7" fill="#ffdcc0"/>
+          <ellipse cx="118" cy="162" rx="12" ry="7" fill="#ffdcc0"/>
+          <ellipse cx="100" cy="106" rx="62" ry="58" fill="#fff6e6" stroke="#ffd9b8" stroke-width="3"/>
+          <path d="M100 50 C96 38 84 34 76 38 C80 48 90 52 100 50Z" fill="var(--mint)"/>
+          <path d="M100 50 C104 36 116 32 124 36 C120 47 110 52 100 50Z" fill="var(--mint2)"/>
+          <circle cx="66" cy="112" r="10" fill="#ff9fb5" opacity=".75"/>
+          <circle cx="134" cy="112" r="10" fill="#ff9fb5" opacity=".75"/>
+          <g class="eo">
+            <circle cx="80" cy="96" r="6.5" fill="#4a2c3b"/><circle cx="120" cy="96" r="6.5" fill="#4a2c3b"/>
+            <circle cx="82" cy="93.5" r="2.2" fill="#fff"/><circle cx="122" cy="93.5" r="2.2" fill="#fff"/>
+          </g>
+          <g class="ec" fill="none" stroke="#4a2c3b" stroke-width="3.5" stroke-linecap="round">
+            <path d="M71 97 q9 8 18 0"/><path d="M111 97 q9 8 18 0"/>
+          </g>
+          <path d="M92 108 q4 6 8 0 q4 6 8 0" fill="none" stroke="#4a2c3b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <g class="zz" fill="#9a6a80" font-family="Jua,sans-serif"><text x="150" y="62" font-size="18">z</text><text x="162" y="48" font-size="13">z</text></g>
+        </g>
+      </svg>
+      <div class="mid"><div class="time" id="time">25:00</div><div class="lbl" id="lbl">집중</div></div>
+    </div>
+  </div>
+
+  <div class="task"><input id="task" maxlength="60" placeholder="지금 집중할 일 (예: 보고서 초안 쓰기)" aria-label="지금 집중할 일"></div>
+
+  <div class="ctrl">
+    <button class="go" id="go">시작</button>
+    <button id="reset">초기화</button>
+    <button id="skip">건너뛰기</button>
+  </div>
+  <div class="dots" id="dots" aria-live="polite"></div>
+
+  <div class="grid">
+    <section class="box">
+      <h2>오늘 기록</h2>
+      <div class="stats">
+        <div><b id="s-cnt">0</b><span>완료한 집중</span></div>
+        <div><b id="s-min">0</b><span>집중한 시간(분)</span></div>
+      </div>
+      <ul id="log"></ul>
+      <button class="link" id="clear">오늘 기록 지우기</button>
+    </section>
+    <section class="box">
+      <h2>설정</h2>
+      <div class="row"><label for="d-work">집중 시간(분)</label><input type="number" id="d-work" min="1" max="120"></div>
+      <div class="row"><label for="d-short">짧은 휴식(분)</label><input type="number" id="d-short" min="1" max="60"></div>
+      <div class="row"><label for="d-long">긴 휴식(분)</label><input type="number" id="d-long" min="1" max="90"></div>
+      <div class="row"><label for="d-every">긴 휴식 주기(집중 횟수)</label><input type="number" id="d-every" min="2" max="10"></div>
+      <div class="row"><label for="o-auto">다음 단계 자동 시작</label><input type="checkbox" id="o-auto"></div>
+      <div class="row"><label for="o-sound">종료 알림음</label><input type="checkbox" id="o-sound"></div>
+    </section>
+  </div>
+  <p class="note">스페이스바로 시작·일시정지할 수 있습니다. 기록과 설정은 이 브라우저에만 저장됩니다.</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const NAMES={work:'집중',short:'짧은 휴식',long:'긴 휴식'};
+const C=2*Math.PI*86;
+const store={get(k,d){try{const v=localStorage.getItem('pomo-'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('pomo-'+k,JSON.stringify(v))}catch(e){}}};
+const today=new Date().toLocaleDateString('ko-KR');
+let cfg=Object.assign({work:25,short:5,long:15,every:4,auto:false,sound:true},store.get('cfg',{}));
+let day=store.get('day',{date:today,items:[]});if(day.date!==today)day={date:today,items:[]};
+let mode='work',total=cfg.work*60,left=total,endAt=0,tick=null,done=0,actx=null;
+
+function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function draw(){
+  $('time').textContent=fmt(left);
+  $('arc').setAttribute('stroke-dasharray',C);$('arc').setAttribute('stroke-dashoffset',C*(1-left/total));
+  $('lbl').textContent=NAMES[mode]+(tick?'':' · 대기');
+  document.title=(tick?fmt(left)+' '+NAMES[mode]+' – ':'')+'포모도로 타이머';
+  document.body.classList.toggle('rest',mode!=='work');
+  $('dial').classList.toggle('run',!!tick);
+  for(const b of document.querySelectorAll('.modes button'))b.setAttribute('aria-pressed',b.dataset.m===mode);
+  $('go').textContent=tick?'일시정지':(left<total?'계속':'시작');
+  const n=cfg.every,k=done%n;
+  $('dots').innerHTML=Array.from({length:n},(_,i)=>`<i class="${i<k?'on':''}">♥</i>`).join('')+`<span>&nbsp;긴 휴식까지 ${n-k}회</span>`;
+}
+function drawLog(){
+  const w=day.items.filter(x=>x.mode==='work');
+  $('s-cnt').textContent=w.length;
+  $('s-min').textContent=w.reduce((a,x)=>a+x.min,0);
+  $('log').innerHTML=day.items.length?day.items.slice().reverse().map(x=>`<li><span>${esc(x.task||NAMES[x.mode])} · ${x.min}분</span><time>${x.t}</time></li>`).join(''):'<li class="empty">아직 기록이 없습니다.</li>';
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function setMode(m){stop();mode=m;total=cfg[m]*60;left=total;draw()}
+function start(){
+  if(tick)return;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();actx.resume()}catch(e){}
+  endAt=Date.now()+left*1000;
+  tick=setInterval(()=>{left=(endAt-Date.now())/1000;if(left<=0){left=0;finish()}else draw()},250);
+  draw();
+}
+function stop(){clearInterval(tick);tick=null;draw()}
+function beep(){
+  if(!cfg.sound||!actx)return;
+  try{[0,.35,.7].forEach(d=>{const o=actx.createOscillator(),g=actx.createGain();o.frequency.value=mode==='work'?880:660;o.connect(g);g.connect(actx.destination);const t=actx.currentTime+d;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+.02);g.gain.exponentialRampToValueAtTime(0.0001,t+.28);o.start(t);o.stop(t+.3)})}catch(e){}
+}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),3000)}
+function finish(record=true){
+  stop();
+  if(record){
+    const now=new Date();
+    day.items.push({mode,min:Math.round(total/60),task:mode==='work'?$('task').value.trim():'',t:now.toTimeString().slice(0,5)});
+    store.set('day',day);drawLog();beep();
+  }
+  let next;
+  if(mode==='work'){done++;next=done%cfg.every===0?'long':'short'}else next='work';
+  if(record)toast(NAMES[mode]+' 끝! 다음은 '+NAMES[next]+'입니다.');
+  setMode(next);
+  if(cfg.auto&&record)start();
+}
+$('go').onclick=()=>tick?stop():start();
+$('reset').onclick=()=>{stop();left=total;draw()};
+$('skip').onclick=()=>finish(false);
+for(const b of document.querySelectorAll('.modes button'))b.onclick=()=>setMode(b.dataset.m);
+$('clear').onclick=()=>{day.items=[];store.set('day',day);drawLog()};
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!=='INPUT'){e.preventDefault();$('go').click()}});
+['work','short','long','every'].forEach(k=>{const el=$('d-'+k);el.value=cfg[k];el.onchange=()=>{const v=Math.round(+el.value);if(!(v>=+el.min&&v<=+el.max)){el.value=cfg[k];return}cfg[k]=v;store.set('cfg',cfg);if(k===mode&&!tick&&left===total){total=v*60;left=total}draw()}});
+['auto','sound'].forEach(k=>{const el=$('o-'+k);el.checked=cfg[k];el.onchange=()=>{cfg[k]=el.checked;store.set('cfg',cfg)}});
+$('task').value=store.get('task','');$('task').oninput=()=>store.set('task',$('task').value);
+draw();drawLog();
+}
+</script>
+</body>
+</html>
